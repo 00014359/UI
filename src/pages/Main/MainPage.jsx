@@ -3,8 +3,10 @@ import c from "./MainPage.module.scss";
 import valuesImage from "../../assets/valuesImage.jpg";
 import BestSeller from "../../components/BestSeller/BestSeller";
 import offSale from "../../assets/50ofSale.jpg";
+import {useNavigate} from "react-router-dom"
 
 const MainPage = () => {
+  const navigate = useNavigate()
   return (
     <div>
       <div className={c.banner_container}>
@@ -16,7 +18,7 @@ const MainPage = () => {
                 Shop now and embrace the sweet smell of victory with Belle Aura.{" "}
               </p>
             </div>
-            <button>Shop now</button>
+            <button onClick={()=> navigate('/shop')}>Shop now</button>
           </div>
         </div>
       </div>
@@ -36,7 +38,7 @@ const MainPage = () => {
               unbelievable prices during our exclusive Perfume Sale!
             </p>
           </div>
-          <button>Know more</button>
+          <button onClick={()=> navigate('/shop')}>Know more</button>
         </div>
         <img src={offSale} alt="offSale" />
       </div>

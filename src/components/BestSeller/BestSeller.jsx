@@ -3,61 +3,74 @@ import c from "./BestSeller.module.scss";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 
-import valuesImage from "../../assets/valuesImage.jpg";
+import bestseller1 from "../../assets/bestsellers/bestseller1.webp";
+import bestseller2 from "../../assets/bestsellers/bestseller8.jpg";
+import bestseller3 from "../../assets/bestsellers/bestseller2.jpg";
+import bestseller4 from "../../assets/bestsellers/bestseller3.webp";
+import bestseller5 from "../../assets/bestsellers/bestseller4.webp";
+import bestseller6 from "../../assets/bestsellers/bestseller5.jpg";
+import bestseller7 from "../../assets/bestsellers/bestseller6.avif";
+import bestseller8 from "../../assets/bestsellers/bestseller7.jpeg";
 
 const businessData = [
   {
-    name: '"Safinur" MCHJ',
-    rating: "AA",
-    inn: 301576714,
-    status: "Platinium",
-    styleId: 0,
-  },
-  {
-    name: '"Baraka Biznes" AJ',
-    rating: "A",
-    inn: 305124578,
-    status: "Gold",
-    styleId: 1,
-  },
-  {
-    name: '"Ideal Market" MCHJ',
-    rating: "B",
-    inn: 307896541,
-    status: "Silver",
-    styleId: 2,
-  },
-  {
-    name: '"Oltin Qo\'l" MCHJ',
-    rating: "AAA",
-    inn: 309874512,
-    status: "Platinium",
-    styleId: 3,
-  },
-  {
-    name: '"Tezkor Servis" AJ',
-    rating: "BB",
-    inn: 302156498,
-    status: "Bronze",
-    styleId: 3,
-  },
-  {
-    name: '"Safinur" MCHJ',
-    rating: "AA",
-    inn: 301576714,
-    status: "Platinium",
-    styleId: 0,
-  },
-  {
-    name: '"Baraka Biznes" MCHJ',
-    rating: "A",
-    inn: 305124578,
-    status: "Gold",
-    styleId: 1,
-  },
-];
+  "id": "1",
+  "name": "Moschino funny",
+  "size": "100ml",
+  "price": 50,
+  "image":bestseller1
+},
+{
+  "id": "2",
+  "name": "Kilian good girl gone bad",
+  "size": "50ml",
+  "price": 230,
+  "image":bestseller2
+},
+{
+  "id": "3",
+  "name": "Dior sauvage",
+  "size": "100ml",
+  "price": 140,
+  "image":bestseller3
+},
+{
+  "id": "4",
+  "name": "Chanel tendre",
+  "size": "100ml",
+  "price": 180,
+  "image":bestseller4
+},
+{
+  "id": "5",
+  "name": "Baccarat rouge 540",
+  "size": "50ml",
+  "price": 235,
+  "image":bestseller5
+},{
+  "id": "6",
+  "name": "Bright crystal versace",
+  "size": "100ml",
+  "price": 80,
+  "image":bestseller6
+},{
+  "id": "7",
+  "name": "Bleu de chanel",
+  "size": "100ml",
+  "price": 180,
+  "image":bestseller7
+},{
+  "id": "8",
+  "name": "Giorgio armani",
+  "size": "100ml",
+  "price": 145,
+  "image":bestseller8
+}
+]
 
-const BestSeller = () => {
+
+
+const BestSeller = () => { 
   return (
     <div className={c.bestsellers}>
       <h2 className={c.title}>Best selling products</h2>
@@ -82,9 +95,9 @@ const BestSeller = () => {
         }}
       >
         {businessData.map((item) => (
-          <SwiperSlide key={item.inn}>
+          <SwiperSlide key={item.id}>
             <img
-              src={valuesImage}
+              src={item.image}
               alt="Card Background image"
               style={{ width: "100%", aspectRatio: "4/5", objectFit: "cover" }}
             />
@@ -100,8 +113,8 @@ const BestSeller = () => {
               {item.name}
             </h3>
             <div style={{ display: "flex", justifyContent: "center" }}>
-              <p style={{ margin: 0 }}>$ {item.inn}</p>
-              <p style={{ margin: 0, marginLeft: 10 }}>{item.rating}</p>
+              <p style={{ margin: 0 }}>$ {item.price}</p>
+              <p style={{ margin: 0, marginLeft: 10 }}>{item.size}</p>
             </div>
           </SwiperSlide>
         ))}
