@@ -1,0 +1,45 @@
+.footer {
+  background-color: #ffd9e6;
+  padding: 2rem 1rem;
+  color: #333;
+  margin-top: 20px;
+
+  .footer_content {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+  }
+
+  .brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: rgb(171, 87, 45); // deep pink
+  }
+
+  .links {
+    display: flex;
+    gap: 1rem;
+
+    a {
+      color: rgb(171, 87, 45);
+      text-decoration: none;
+      font-size: 1.2rem;
+      transition: color 0.3s ease;
+
+      &:hover {
+        color: rgb(106, 49, 20);
+      }
+    }
+  }
+
+  .copyright {
+    text-align: center;
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+}
