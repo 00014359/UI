@@ -1,73 +1,73 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import c from "./Shop.module.scss";
-import { Link } from "react-router-dom";
+import c from "../Shop/Shop.module.scss";
+import { Link, useNavigate } from "react-router-dom";
 
-const Shop = () => {
+const ForYouPage = () => {
   const [perfumes, setPerfumes] = useState([]);
-  const [genderFilter, setGenderFilter] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [minPriceFilter, setMinPriceFilter] = useState("");
-  const [maxPriceFilter, setMaxPriceFilter] = useState("");
-
   const [showModal, setShowModal] = useState(false);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState(null);
-  const [quantity, setQuantity] = useState();
+  const [quantity, setQuantity] = useState("");
   const [orderMessage, setOrderMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [orderError, setOrderError] = useState("");
+  const [hasCompletedQuiz, setHasCompletedQuiz] = useState(true);
 
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPerfumes = async () => {
       setIsLoading(true);
       try {
-        const params = new URLSearchParams();
-        if (genderFilter) {
-          params.append("gender", genderFilter);
-        }
-        if (searchQuery) {
-          params.append("search", searchQuery);
-        }
-        if (minPriceFilter !== "") {
-          params.append("minPrice", minPriceFilter);
-        }
-        if (maxPriceFilter !== "") {
-          params.append("maxPrice", maxPriceFilter);
-        }
+        const url = `https://server-production-45af.up.railway.app/api/parfume/for-you/recommendations`;
 
-        const queryString = params.toString();
-        const url = `https://server-production-45af.up.railway.app/api/parfume${
-          queryString ? `?${queryString}` : ""
-        }`;
+        const res = await axios.get(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
 
-        const res = await axios.get(url);
-        setPerfumes(res.data);
+        if (res.data.hasCompletedQuiz === false) {
+          setHasCompletedQuiz(false);
+          setPerfumes([]);
+        } else {
+          setHasCompletedQuiz(true);
+          setPerfumes(res.data.perfumes);
+        }
       } catch (error) {
         console.error("Error fetching perfumes:", error);
+        if (error.response && error.response.status === 401) {
+          alert("Please log in to view personalized recommendations.");
+          navigate("/login");
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchPerfumes();
-  }, [genderFilter, searchQuery, minPriceFilter, maxPriceFilter]);
+    if (token) {
+      fetchPerfumes();
+    } else {
+      setIsLoading(false);
+      alert("Please log in to view personalized recommendations.");
+      navigate("/login");
+    }
+  }, [token, navigate]);
 
   const handleOrderClick = (id) => {
     if (!token) {
       alert("Please log in to place an order.");
+      navigate("/login");
       return;
     }
     setSelectedPerfumeId(id);
-    setQuantity();
+    setQuantity("");
     setOrderMessage("");
     setOrderError("");
     setShowModal(true);
   };
 
   const handleSubmitOrder = async () => {
-    if (quantity <= 0) {
+    if (!quantity || parseInt(quantity) <= 0) {
       setOrderError("Quantity must be at least 1.");
       return;
     }
@@ -88,6 +88,23 @@ const Shop = () => {
       );
       alert("Order placed successfully! We will contact you soon.");
       setShowModal(false);
+      const fetchPerfumes = async () => {
+        try {
+          const url = `https://server-production-45af.up.railway.app/api/parfume/for-you/recommendations`;
+          const res = await axios.get(url, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (res.data.hasCompletedQuiz === false) {
+            setHasCompletedQuiz(false);
+            setPerfumes([]);
+          } else {
+            setHasCompletedQuiz(true);
+            setPerfumes(res.data.perfumes);
+          }
+        } catch (error) {
+          console.error("Error fetching perfumes after order:", error);
+        }
+      };
       fetchPerfumes();
     } catch (err) {
       console.error(
@@ -104,6 +121,10 @@ const Shop = () => {
     }
   };
 
+  const handleQuizRedirect = () => {
+    navigate("/quiz");
+  };
+
   return (
     <div className={c.shopPage}>
       {isLoading && (
@@ -112,59 +133,16 @@ const Shop = () => {
         </div>
       )}
 
-      <div className={c.filters}>
-        <div className={c.filterGroup}>
-          <button
-            className={genderFilter === "" ? c.activeFilter : ""}
-            onClick={() => setGenderFilter("")}
-          >
-            All
-          </button>
-          <button
-            className={genderFilter === "MALE" ? c.activeFilter : ""}
-            onClick={() => setGenderFilter("MALE")}
-          >
-            Male
-          </button>
-          <button
-            className={genderFilter === "FEMALE" ? c.activeFilter : ""}
-            onClick={() => setGenderFilter("FEMALE")}
-          >
-            Female
-          </button>
-          <button
-            className={genderFilter === "UNISEX" ? c.activeFilter : ""}
-            onClick={() => setGenderFilter("UNISEX")}
-          >
-            Unisex
+      {!hasCompletedQuiz ? (
+        <div className={c.quizPrompt}>
+          <p className={c.noResults}>
+            Complete your preference quiz to get personalized recommendations.
+          </p>
+          <button className={c.quizButton} onClick={handleQuizRedirect}>
+            Complete the Quiz
           </button>
         </div>
-        <div className={c.filterInputs}>
-          <input
-            type="text"
-            placeholder="Search perfumes..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={c.searchInput}
-          />
-          <input
-            type="number"
-            placeholder="Min Price"
-            value={minPriceFilter}
-            onChange={(e) => setMinPriceFilter(e.target.value)}
-            className={c.priceInput}
-          />
-          <input
-            type="number"
-            placeholder="Max Price"
-            value={maxPriceFilter}
-            onChange={(e) => setMaxPriceFilter(e.target.value)}
-            className={c.priceInput}
-          />
-        </div>
-      </div>
-
-      {perfumes.length > 0 ? (
+      ) : perfumes.length > 0 ? (
         <div className={c.grid}>
           {perfumes.map((perfume) => (
             <div key={perfume.id} className={c.card}>
@@ -243,4 +221,4 @@ const Shop = () => {
   );
 };
 
-export default Shop;
+export default ForYouPage;
