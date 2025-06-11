@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import c from "./Shop.module.scss";
 import { Link } from "react-router-dom";
@@ -10,49 +10,72 @@ const Shop = () => {
   const [minPriceFilter, setMinPriceFilter] = useState("");
   const [maxPriceFilter, setMaxPriceFilter] = useState("");
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [pageSize] = useState(10);
+
   const [showModal, setShowModal] = useState(false);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState(null);
-  const [quantity, setQuantity] = useState();
+  const [quantity, setQuantity] = useState("");
   const [orderMessage, setOrderMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [orderError, setOrderError] = useState("");
 
   const token = localStorage.getItem("token");
 
-  useEffect(() => {
-    const fetchPerfumes = async () => {
-      setIsLoading(true);
-      try {
-        const params = new URLSearchParams();
-        if (genderFilter) {
-          params.append("gender", genderFilter);
-        }
-        if (searchQuery) {
-          params.append("search", searchQuery);
-        }
-        if (minPriceFilter !== "") {
-          params.append("minPrice", minPriceFilter);
-        }
-        if (maxPriceFilter !== "") {
-          params.append("maxPrice", maxPriceFilter);
-        }
-
-        const queryString = params.toString();
-        const url = `https://server-production-45af.up.railway.app/api/parfume${
-          queryString ? `?${queryString}` : ""
-        }`;
-
-        const res = await axios.get(url);
-        setPerfumes(res.data);
-      } catch (error) {
-        console.error("Error fetching perfumes:", error);
-      } finally {
-        setIsLoading(false);
+  const fetchPerfumes = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (genderFilter) {
+        params.append("gender", genderFilter);
       }
-    };
+      if (searchQuery) {
+        params.append("search", searchQuery);
+      }
+      if (minPriceFilter !== "") {
+        params.append("minPrice", minPriceFilter);
+      }
+      if (maxPriceFilter !== "") {
+        params.append("maxPrice", maxPriceFilter);
+      }
+      params.append("page", currentPage);
+      params.append("pageSize", pageSize);
 
+      const queryString = params.toString();
+      const url = `https://server-production-45af.up.railway.app/api/parfume${
+        queryString ? `?${queryString}` : ""
+      }`;
+
+      const res = await axios.get(url);
+      setPerfumes(res.data.perfumes);
+      setTotalItems(res.data.totalCount);
+      setTotalPages(res.data.totalPages);
+    } catch (error) {
+      console.error("Error fetching perfumes:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [
+    genderFilter,
+    searchQuery,
+    minPriceFilter,
+    maxPriceFilter,
+    currentPage,
+    pageSize,
+  ]);
+
+  useEffect(() => {
     fetchPerfumes();
-  }, [genderFilter, searchQuery, minPriceFilter, maxPriceFilter]);
+  }, [
+    genderFilter,
+    searchQuery,
+    minPriceFilter,
+    maxPriceFilter,
+    currentPage,
+    fetchPerfumes,
+  ]);
 
   const handleOrderClick = (id) => {
     if (!token) {
@@ -60,15 +83,15 @@ const Shop = () => {
       return;
     }
     setSelectedPerfumeId(id);
-    setQuantity();
+    setQuantity("");
     setOrderMessage("");
     setOrderError("");
     setShowModal(true);
   };
 
   const handleSubmitOrder = async () => {
-    if (quantity <= 0) {
-      setOrderError("Quantity must be at least 1.");
+    if (isNaN(quantity) || parseInt(quantity) <= 0) {
+      setOrderError("Quantity must be a positive number.");
       return;
     }
 
@@ -102,6 +125,44 @@ const Shop = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const getPaginationPages = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      let startPage = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+      let endPage = Math.min(totalPages, startPage + maxPagesToShow - 1);
+
+      if (endPage - startPage + 1 < maxPagesToShow) {
+        startPage = Math.max(1, endPage - maxPagesToShow + 1);
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        pages.push(i);
+      }
+
+      if (startPage > 1) {
+        if (startPage > 2) pages.unshift("...");
+        pages.unshift(1);
+      }
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) pages.push("...");
+        pages.push(totalPages);
+      }
+    }
+    return pages;
   };
 
   return (
@@ -165,38 +226,76 @@ const Shop = () => {
       </div>
 
       {perfumes.length > 0 ? (
-        <div className={c.grid}>
-          {perfumes.map((perfume) => (
-            <div key={perfume.id} className={c.card}>
-              <Link to={`/perfume/${perfume.id}`} className={c.cardLink}>
-                <div className={c.cardImageContainer}>
-                  <img
-                    src={
-                      perfume.image ||
-                      "https://via.placeholder.com/200x200?text=No+Image"
-                    }
-                    alt={perfume.name}
-                    className={c.cardImage}
-                  />
-                </div>
-                <div className={c.cardContent}>
-                  <h4 className={c.cardName}>{perfume.name}</h4>
-                  <p className={c.cardBrand}>{perfume.brand}</p>
-                  <div className={c.cardDetails}>
-                    <p className={c.cardPrice}>${perfume.price}</p>
-                    <p className={c.cardSize}>{perfume.size}ml</p>
+        <>
+          <div className={c.grid}>
+            {perfumes.map((perfume) => (
+              <div key={perfume.id} className={c.card}>
+                <Link to={`/perfume/${perfume.id}`} className={c.cardLink}>
+                  <div className={c.cardImageContainer}>
+                    <img
+                      src={
+                        perfume.image ||
+                        "https://via.placeholder.com/200x200?text=No+Image"
+                      }
+                      alt={perfume.name}
+                      className={c.cardImage}
+                    />
                   </div>
-                </div>
-              </Link>
+                  <div className={c.cardContent}>
+                    <h4 className={c.cardName}>{perfume.name}</h4>
+                    <p className={c.cardBrand}>{perfume.brand}</p>
+                    <div className={c.cardDetails}>
+                      <p className={c.cardPrice}>${perfume.price}</p>
+                      <p className={c.cardSize}>{perfume.size}ml</p>
+                    </div>
+                  </div>
+                </Link>
+                <button
+                  className={c.orderBtn}
+                  onClick={() => handleOrderClick(perfume.id)}
+                >
+                  Order Now
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {totalPages > 1 && (
+            <div className={c.pagination}>
               <button
-                className={c.orderBtn}
-                onClick={() => handleOrderClick(perfume.id)}
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={c.pageButton}
               >
-                Order Now
+                Previous
+              </button>
+              {getPaginationPages().map((page, index) =>
+                page === "..." ? (
+                  <span key={index} className={c.ellipsis}>
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={index}
+                    onClick={() => handlePageChange(page)}
+                    className={`${c.pageButton} ${
+                      currentPage === page ? c.activePage : ""
+                    }`}
+                  >
+                    {page}
+                  </button>
+                )
+              )}
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={c.pageButton}
+              >
+                Next
               </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       ) : (
         !isLoading && (
           <p className={c.noResults}>
