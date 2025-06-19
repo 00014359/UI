@@ -18,6 +18,7 @@ const Shop = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedPerfumeId, setSelectedPerfumeId] = useState(null);
   const [quantity, setQuantity] = useState("");
+  const [orderAddress, setOrderAddress] = useState("");
   const [orderMessage, setOrderMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [orderError, setOrderError] = useState("");
@@ -103,7 +104,8 @@ const Shop = () => {
         {
           perfumeId: selectedPerfumeId,
           quantity: parseInt(quantity),
-          orderMessage,
+          orderAddress: orderAddress,
+          orderMessage: orderMessage,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -315,6 +317,13 @@ const Shop = () => {
               value={quantity}
               onChange={(e) => setQuantity(e.target.value)}
               min="1"
+              className={c.modalInput}
+            />
+            <input
+              type="text"
+              placeholder="Order Address"
+              value={orderAddress}
+              onChange={(e) => setOrderAddress(e.target.value)}
               className={c.modalInput}
             />
             <textarea
